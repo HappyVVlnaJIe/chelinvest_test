@@ -7,57 +7,69 @@
 class BaseConverter
 {
 public:
-	virtual std::string sumProp(int nSum, std::string sGender, std::string sCase) = 0;
-	// nSum - целое число менее триллиона (максимум 999 999 999 999)
-	// sGender - род(М - мужской, Ж - женский, С - средний)
-	// sCase - падеж( И -именительный, …, П - предложный)
+	virtual std::string sumProp(long long nSum, std::string sGender, std::string sCase) = 0;
+	// nSum - С†РµР»РѕРµ С‡РёСЃР»Рѕ РјРµРЅРµРµ С‚СЂРёР»Р»РёРѕРЅР° (РјР°РєСЃРёРјСѓРј 999 999 999 999)
+	// sGender - СЂРѕРґ(Рњ - РјСѓР¶СЃРєРѕР№, Р– - Р¶РµРЅСЃРєРёР№, РЎ - СЃСЂРµРґРЅРёР№)
+	// sCase - РїР°РґРµР¶( Р -РёРјРµРЅРёС‚РµР»СЊРЅС‹Р№, вЂ¦, Рџ - РїСЂРµРґР»РѕР¶РЅС‹Р№)
+	// РІРѕР·РІСЂР°С‰Р°РµС‚ РїСѓСЃС‚СѓСЋ СЃС‚СЂРѕРєСѓ РµСЃР»Рё РЅРµРІРѕР·РјРѕР¶РЅРѕ РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ
 };
 
 class NumberConverter :public BaseConverter
 {
 public:
 	NumberConverter();
-	std::string sumProp(int nSum, std::string sGender, std::string sCase) override;
+	std::string sumProp(long long nSum, std::string sGender, std::string sCase) override;
 private:
-	std::string sumThree(int nSum, std::string sGender, std::string sCase);
-	void LoadUnitsConfigs();
-	void LoadDozensAndHundredsConfigs();
-	void LoadExceptionNumbersConfigs();
-
-	enum class ThousandsOfNumber // число разбивается по тройкам: первые три разряда - тысяча, следующие - миллион и т.д.
+	enum class ThousandsOfNumber // С‡РёСЃР»Рѕ СЂР°Р·Р±РёРІР°РµС‚СЃСЏ РїРѕ С‚СЂРѕР№РєР°Рј: РїРµСЂРІС‹Рµ С‚СЂРё СЂР°Р·СЂСЏРґР° - С‚С‹СЃСЏС‡Р°, СЃР»РµРґСѓСЋС‰РёРµ - РјРёР»Р»РёРѕРЅ Рё С‚.Рґ.
 	{
 		Thousand,
 		Million,
 		Billion,
-		Trillion,
+		Trillion
 	};
 
 	enum class PartsOfNumber
 	{
 		Units,
 		Dozens,
-		Hundreds,
+		Hundreds
 	};
 
-	const std::vector<const std::string> genders = { "М" , "Ж", "С"};
+	const long long MAX_VALUE = 999999999999;
+	const std::vector<std::string> genders = { "Рњ", "Р–", "РЎ"};
+	const int male_idx = 0;
+	const int female_idx = 1;
 	const char separator = '|';
-	const std::vector<const std::string> cases = { "И", "Р", "Д", "В", "Т", "П"};
+	const std::vector<std::string> cases = { "Р", "Р ", "Р”", "Р’", "Рў", "Рџ"};
+	const int cases_count = 6;
 
 	const std::string units_configs_path = "configs\\units_configs.txt";
 	const std::string dozens_configs_path = "configs\\dozens_configs.txt";
 	const std::string hundreds_configs_path = "configs\\hundreds_configs.txt";
 	const std::string exception_numbers_configs_path = "configs\\exception_numbers_configs.txt";
+	const std::string key_words_configs_path = "configs\\key_words_configs.txt"; 
+	//С„Р°Р№Р»С‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РІ РєРѕРґРёСЂРѕРІРєРµ ANSI
 
-	using declination_table = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>; 
-	// таблица вида: строки это падеж, столбцы это род, в ячейках слово. 
-	// Использую мапу вместо веторов, чтобы было проще обращаться, когда формирую строку
-
-	using cases_table = std::unordered_map<std::string, std::string>;
-	// таблица вида: строки это падеж, в ячейках слово. 
+	using declination_table = std::vector<std::vector<std::string>>; 
+	// С‚Р°Р±Р»РёС†Р° РІРёРґР°: СЃС‚СЂРѕРєРё СЌС‚Рѕ РїР°РґРµР¶, СЃС‚РѕР»Р±С†С‹ СЌС‚Рѕ СЂРѕРґ, РІ СЏС‡РµР№РєР°С… СЃР»РѕРІРѕ. 
+																													
+	using cases_table = std::vector<std::string>;
+	// С‚Р°Р±Р»РёС†Р° РІРёРґР°: СЃС‚СЂРѕРєРё СЌС‚Рѕ РїР°РґРµР¶, РІ СЏС‡РµР№РєР°С… СЃР»РѕРІРѕ. 
 												
-	std::unordered_map<int, declination_table> units;
-	std::unordered_map<int, cases_table> dozens;
-	std::unordered_map<int, cases_table> hundreds;
-	std::unordered_map<int, cases_table> exception_numbers; // 0, 11, 12, 13, 14, 15, 16, 17, 18, 19
+	std::vector<declination_table> units;
+	std::vector<cases_table> dozens;
+	std::vector<cases_table> hundreds;
+	std::unordered_map<int, cases_table> exception_numbers; // 0, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+	std::vector<cases_table> thousands; // key words
+	std::vector<cases_table> millions;  // key words
+	std::vector<cases_table> billions;  // key words
+	const int key_words_types_count = 3; // РїРµСЂРІР°СЏ РіСЂСѓРїРїР° РґР»СЏ 1, РІС‚РѕСЂР°СЏ РґР»СЏ 2-4, С‚СЂРµС‚СЊСЏ РґР»СЏ 5-19 Рё 0
+
+	std::string sumThree(int nSum, int gender_idx, int case_idx);
+	std::string AddThousandsWord(int number, int case_idx, ThousandsOfNumber cur_state);
+	void LoadUnitsConfigs();
+	void LoadDozensAndHundredsConfigs();
+	void LoadExceptionNumbersConfigs();
+	void LoadKeyWordsConfigs();
 };
 
